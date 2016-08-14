@@ -6,3 +6,6 @@ cabal.sandbox.config
 .DS_Store
 *.swp
 *.keter
+connections.csv
+codex.tags
+hscope.out
