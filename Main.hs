@@ -4,7 +4,7 @@ import qualified Network.Wreq as W
 import           Control.Lens hiding (element)
 import qualified Control.Monad.Parallel as P
 import           Data.Csv
-import           Data.String.Here.Interpolated
+import           Text.InterpolatedString.Perl6
 import qualified Data.Text as T
 import qualified Data.Vector as V
 import           GHC.Exts (sortWith)
@@ -19,7 +19,7 @@ type Minute  = Int
 type Prediction = (RouteId, Minute)
 
 sayPrediction :: Prediction -> Text
-sayPrediction (r, m) = [i|${r} ${m}|]
+sayPrediction (r, m) = [qq|$r $m|]
 
 main :: IO ()
 main = do
@@ -37,15 +37,23 @@ main = do
       file "./static/blip.mp3"
 
     get "/" $ do
+      setHeader "Content-Type" "text/xml"
+      text [q|
+        <Response>
+          <Gather timeout="10" finishOnKey="*">
+            <Play>blip.mp3</Play>
+          </Gather>
+        </Response>
+      |]
+
+    get "/when" $ do
       times <- liftIO $ P.mapM (uncurry predictedArrivals) fromNB
       let nextStops = sortWith snd $ join times
           next = T.intercalate ", " . map sayPrediction $ nextStops
-      text [i|
-        <?xml version="1.0" encoding="UTF-8"?>
+      setHeader "Content-Type" "text/xml"
+      text [qq|
         <Response>
-          <Say>
-            ${next}
-          </Say>
+          <Say>$next</Say>
         </Response>
       |]
 
