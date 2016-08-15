@@ -24,12 +24,10 @@ sayPrediction (r, m) = [qq|$r $m|]
 main :: IO ()
 main = do
   connData <- toS <$> readFile "connections.csv"
-  let connections =
+  let connections = V.toList $
         case decode NoHeader connData of
           Left err -> error $ toS err
           Right v -> v :: V.Vector (Region, Region, StopId, RouteId)
-
-  let fromNB = [(r,s) | (f,_,s,r) <- V.toList connections, f == 3]
 
   scotty 3000 $ do
     get "/blip.mp3" $ do
@@ -40,22 +38,39 @@ main = do
       setHeader "Content-Type" "text/xml"
       text [q|
         <Response>
-          <Gather timeout="10" finishOnKey="*">
+          <Gather timeout="10" action="when" method="GET">
             <Play>blip.mp3</Play>
           </Gather>
         </Response>
       |]
 
     get "/when" $ do
-      times <- liftIO $ P.mapM (uncurry predictedArrivals) fromNB
-      let nextStops = sortWith snd $ join times
-          next = T.intercalate ", " . map sayPrediction $ nextStops
       setHeader "Content-Type" "text/xml"
-      text [qq|
-        <Response>
-          <Say>$next</Say>
-        </Response>
-      |]
+      digits <- map (fromMaybe 0 . readMaybe . toS) . T.chunksOf 1 <$>
+        rescue (param "Digits") (const $ return "")
+
+      let query = case digits of
+            [region] -> [(r,s) | (f,_,s,r) <- connections, f == region]
+            [r1,r2] -> [(r,s) | (f,t,s,r) <- connections, f == r1, t == r2]
+            _ -> []
+
+      times <- liftIO $ P.mapM (uncurry predictedArrivals) query
+      text $ if null query
+        then [q|
+            <Response>
+              <Redirect>../</Redirect>
+            </Response>
+          |]
+        else
+          let nextStops = sortWith snd $ join times
+              next = T.intercalate ", " . map sayPrediction $ nextStops in
+          [qq|
+            <Response>
+              <Gather timeout="10" action="when" method="GET">
+                <Say>$next</Say>
+              </Gather>
+            </Response>
+          |]
 
 predictedArrivals :: RouteId -> StopId -> IO [Prediction]
 predictedArrivals route stop = do
