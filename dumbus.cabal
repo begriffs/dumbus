@@ -15,7 +15,7 @@ executable          dumbus
                   , cassava >= 0.4.5                && < 0.5
                   , here >= 1.2.7                   && < 2
                   , lens >= 4.5                     && < 5
-                  , parallel >= 3.2.0.0             && < 3.3
+                  , monad-parallel >= 0.7.2.0       && < 0.8
                   , protolude >= 0.1.6              && < 1
                   , scotty >= 0.10.0                && < 0.11
                   , time   >= 1.5.0.0               && < 1.7

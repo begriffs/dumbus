@@ -2,15 +2,13 @@ import Protolude hiding (get)
 
 import qualified Network.Wreq as W
 import           Control.Lens hiding (element)
--- import           Control.Parallel.Strategies
+import qualified Control.Monad.Parallel as P
 import           Data.Csv
-import qualified Data.HashMap.Strict as M
 import           Data.String.Here.Interpolated
 import           Data.Time.Clock
 import qualified Data.Vector as V
 import           Text.XML hiding (readFile)
 import           Text.XML.Cursor
--- import           Text.InterpolatedString.Perl6
 import           Web.Scotty
 
 type RouteId = Int
@@ -28,13 +26,14 @@ main = do
   let connections =
         case decode NoHeader connData of
           Left err -> error $ toS err
-          Right v ->
-            v :: V.Vector (Region, Region, StopId, RouteId)
+          Right v -> v :: V.Vector (Region, Region, StopId, RouteId)
 
-  scotty 3000 $ do
+  let fromNB = [(r,s) | (f,_,s,r) <- V.toList connections, f == 3]
+
+  scotty 3000 $
     get "/" $ do
-      times <- liftIO $ predictedArrivals 27 3612
-      let list = show times :: Text
+      times <- liftIO $ P.mapM (uncurry predictedArrivals) fromNB
+      let list = (show $ join times)::Text
       text [i|
         <?xml version="1.0" encoding="UTF-8"?>
         <Response>
