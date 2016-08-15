@@ -5,7 +5,9 @@ import           Control.Lens hiding (element)
 import qualified Control.Monad.Parallel as P
 import           Data.Csv
 import           Data.String.Here.Interpolated
+import qualified Data.Text as T
 import qualified Data.Vector as V
+import           GHC.Exts (sortWith)
 import           Text.XML hiding (readFile)
 import           Text.XML.Cursor
 import           Web.Scotty
@@ -14,10 +16,10 @@ type RouteId = Int
 type StopId  = Int
 type Region  = Int
 type Minute  = Int
--- data Waypoint = Waypoint {
---     wpStop :: StopId
---   , wpRoute :: RouteId
---   }
+type Prediction = (RouteId, Minute)
+
+sayPrediction :: Prediction -> Text
+sayPrediction (r, m) = [i|${r} ${m}|]
 
 main :: IO ()
 main = do
@@ -29,20 +31,25 @@ main = do
 
   let fromNB = [(r,s) | (f,_,s,r) <- V.toList connections, f == 3]
 
-  scotty 3000 $
+  scotty 3000 $ do
+    get "/blip.mp3" $ do
+      setHeader "Content-Type" "audio/mpeg"
+      file "./static/blip.mp3"
+
     get "/" $ do
       times <- liftIO $ P.mapM (uncurry predictedArrivals) fromNB
-      let list = (show $ join times)::Text
+      let nextStops = sortWith snd $ join times
+          next = T.intercalate ", " . map sayPrediction $ nextStops
       text [i|
         <?xml version="1.0" encoding="UTF-8"?>
         <Response>
           <Say>
-            ${list}
+            ${next}
           </Say>
         </Response>
       |]
 
-predictedArrivals :: RouteId -> StopId -> IO [Minute]
+predictedArrivals :: RouteId -> StopId -> IO [Prediction]
 predictedArrivals route stop = do
   payload <- W.get . toS $ busArrivalUrl route stop
   let cursor = fromDocument . parseText_ def . toS $
@@ -50,7 +57,7 @@ predictedArrivals route stop = do
       predictions = cursor $// element "prediction"
                            >=> attribute "minutes"
 
-  return $ fromMaybe 0 . readMaybe . toS <$> predictions
+  return $ (route,) . fromMaybe 0 . readMaybe . toS <$> predictions
 
  where
   busArrivalUrl :: RouteId -> StopId -> Text
