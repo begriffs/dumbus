@@ -5,7 +5,6 @@ import           Control.Lens hiding (element)
 import qualified Control.Monad.Parallel as P
 import           Data.Csv
 import           Data.String.Here.Interpolated
-import           Data.Time.Clock
 import qualified Data.Vector as V
 import           Text.XML hiding (readFile)
 import           Text.XML.Cursor
@@ -14,11 +13,11 @@ import           Web.Scotty
 type RouteId = Int
 type StopId  = Int
 type Region  = Int
---type Prediction = (DiffTime, RouteId)
-data Waypoint = Waypoint {
-    wpStop :: StopId
-  , wpRoute :: RouteId
-  }
+type Minute  = Int
+-- data Waypoint = Waypoint {
+--     wpStop :: StopId
+--   , wpRoute :: RouteId
+--   }
 
 main :: IO ()
 main = do
@@ -43,16 +42,15 @@ main = do
         </Response>
       |]
 
-predictedArrivals :: RouteId -> StopId -> IO [DiffTime]
+predictedArrivals :: RouteId -> StopId -> IO [Minute]
 predictedArrivals route stop = do
   payload <- W.get . toS $ busArrivalUrl route stop
   let cursor = fromDocument . parseText_ def . toS $
                  payload ^. W.responseBody
       predictions = cursor $// element "prediction"
-                           >=> attribute "seconds"
+                           >=> attribute "minutes"
 
-  return $ secondsToDiffTime
-    . fromMaybe 0 . readMaybe . toS <$> predictions
+  return $ fromMaybe 0 . readMaybe . toS <$> predictions
 
  where
   busArrivalUrl :: RouteId -> StopId -> Text

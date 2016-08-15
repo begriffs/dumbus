@@ -18,7 +18,6 @@ executable          dumbus
                   , monad-parallel >= 0.7.2.0       && < 0.8
                   , protolude >= 0.1.6              && < 1
                   , scotty >= 0.10.0                && < 0.11
-                  , time   >= 1.5.0.0               && < 1.7
                   , unordered-containers >= 0.2.5.0 && < 0.3.0.0
                   , vector >= 0.11.0.0              && < 0.12
                   , xml-conduit >= 1.3.5            && < 2
