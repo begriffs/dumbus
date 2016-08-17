@@ -12,7 +12,7 @@ import           Text.XML hiding (readFile)
 import           Text.XML.Cursor
 import           Web.Scotty
 
-type RouteId = Int
+type RouteId = Text
 type StopId  = Int
 type Region  = Int
 type Minute  = Int
@@ -85,4 +85,4 @@ predictedArrivals route stop = do
  where
   busArrivalUrl :: RouteId -> StopId -> Text
   busArrivalUrl r s =
-    "http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=sf-muni&r="<>show r<>"&s="<>show s
+    "http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=sf-muni&r="<>r<>"&s="<>show s
