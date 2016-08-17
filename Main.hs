@@ -38,7 +38,7 @@ main = do
       setHeader "Content-Type" "text/xml"
       text [q|
         <Response>
-          <Gather timeout="10" action="when" method="GET">
+          <Gather timeout="300" action="when" method="GET">
             <Play>blip.mp3</Play>
           </Gather>
         </Response>
@@ -58,7 +58,7 @@ main = do
       text $ if null query
         then [q|
             <Response>
-              <Redirect>../</Redirect>
+              <Redirect method="GET">/</Redirect>
             </Response>
           |]
         else
@@ -66,7 +66,7 @@ main = do
               next = T.intercalate ", " . map sayPrediction $ nextStops in
           [qq|
             <Response>
-              <Gather timeout="10" action="when" method="GET">
+              <Gather timeout="300" action="when" method="GET">
                 <Say>$next</Say>
               </Gather>
             </Response>
