@@ -29,7 +29,7 @@ main = do
           Left err -> error $ toS err
           Right v -> v :: V.Vector (Region, Region, StopId, RouteId)
 
-  scotty 3000 $ do
+  scotty 4321 $ do
     get "/blip.mp3" $ do
       setHeader "Content-Type" "audio/mpeg"
       file "./static/blip.mp3"
