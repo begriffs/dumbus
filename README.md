@@ -67,14 +67,10 @@ calls that points to `http://yourserver.com:4321`.
 
 ## Using the app
 
-If your dumbphone supports shortcuts for frequently used numbers
-assign one. (My Motofone allows me to designate numbers to call
-when holding down certain keys, so I can start the app by pulling
-out my phone and holding a key.)
-
-You call the app, and it answers immediately with a short beep. It
-is waiting for q query. They are of two forms: `XY#` or `X#` (for
-instance `12#`).
+Assign a speed-dial key for this app if your phone supports it.
+When you call the app, and it answers immediately with a short beep.
+It is waiting for a query. They are of two forms: `XY#` or `X#`
+(for instance `12#`).
 
 The first will tell you the next departures from region X to Y
 ordered soonest first. The second form lists departures from region
